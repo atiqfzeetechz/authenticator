@@ -1,8 +1,13 @@
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import GoogleLogin from '@/src/googlelogin/GoogleLogin';
+import { router } from 'expo-router';
+import GoogleLogin from '@/src/googlelogin/GoogleLoginFixed';
 
 export default function LoginScreen() {
+  const handleSkip = () => {
+    router.replace('/');
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -18,9 +23,9 @@ export default function LoginScreen() {
         
         <GoogleLogin />
         
-        <TouchableOpacity style={styles.skipButton}>
+        {/* <TouchableOpacity style={styles.skipButton} onPress={handleSkip}>
           <Text style={styles.skipText}>Continue without login</Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
       </View>
     </View>
   );

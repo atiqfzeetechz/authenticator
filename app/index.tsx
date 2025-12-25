@@ -1,18 +1,54 @@
 import { View, FlatList, StyleSheet, TouchableOpacity, Text } from 'react-native';
 import { useState, useEffect, useCallback } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import OTPCard from '@/src/components/OTPCard';
 import AddAccountModal from '@/src/components/AddAccountModal';
 import { useAuth } from '@/src/context/AuthContext';
 import { generateTOTP, getTimeRemaining } from '@/src/utils/totp';
+import { router } from 'expo-router';
 
 export default function HomeScreen() {
   const [visible, setVisible] = useState(false);
   const [codes, setCodes] = useState<{ [id: string]: string }>({});
   const [timeRemaining, setTimeRemaining] = useState(getTimeRemaining());
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
   const { accounts } = useAuth();
+
+  // Check login status
+  useEffect(() => {
+    checkLoginStatus();
+  }, []);
+
+  const checkLoginStatus = async () => {
+    try {
+      const user = await AsyncStorage.getItem('user');
+      if (user) {
+        setIsLoggedIn(true);
+      } else {
+        setIsLoggedIn(false);
+        router.replace('/login');
+        return;
+      }
+    } catch (error) {
+      setIsLoggedIn(false);
+      router.replace('/login');
+      return;
+    }
+  };
+
+  // Show loading while checking login
+  if (isLoggedIn === null || isLoggedIn === false) {
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <Text style={{ color: '#fff', fontSize: 18 }}>Loading...</Text>
+      </View>
+    );
+  }
 
   // 🔁 Update time remaining every second
   useEffect(() => {
+    if (isLoggedIn !== true) return;
+    
     const interval = setInterval(() => {
       const remaining = getTimeRemaining();
       setTimeRemaining(remaining);
@@ -24,10 +60,12 @@ export default function HomeScreen() {
     }, 1000);
     
     return () => clearInterval(interval);
-  }, [accounts]);
+  }, [accounts, isLoggedIn]);
 
   // 🔁 Update all OTP codes
   const updateAllCodes = useCallback(async () => {
+    if (isLoggedIn !== true) return;
+    
     const newCodes: { [id: string]: string } = {};
     
     for (const acc of accounts) {
@@ -41,12 +79,14 @@ export default function HomeScreen() {
     }
     
     setCodes(newCodes);
-  }, [accounts]);
+  }, [accounts, isLoggedIn]);
 
   // 🔁 Initial and account change update
   useEffect(() => {
-    updateAllCodes();
-  }, [updateAllCodes]);
+    if (isLoggedIn === true) {
+      updateAllCodes();
+    }
+  }, [updateAllCodes, isLoggedIn]);
 
   // Calculate progress for progress bar (0 to 1)
   const progress = 1 - (timeRemaining / 30);
