@@ -13,9 +13,9 @@ export default function OTPCard({ issuer, account, code, timeRemaining }: OTPCar
   return (
     <View style={styles.card}>
       <View style={styles.header}>
-        <View>
-          <Text style={styles.issuer}>{issuer}</Text>
-          {account ? <Text style={styles.account}>{account}</Text> : null}
+        <View style={styles.textContainer}>
+          <Text style={styles.issuer} numberOfLines={1}>{issuer}</Text>
+          {account ? <Text style={styles.account} numberOfLines={1}>{account}</Text> : null}
         </View>
         <View style={styles.codeContainer}>
           <Text style={styles.code}>{code}</Text>
@@ -49,6 +49,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 12,
   },
+  textContainer: {
+    flex: 1,
+    marginRight: 12,
+  },
   issuer: {
     color: '#fff',
     fontSize: 18,
@@ -61,6 +65,7 @@ const styles = StyleSheet.create({
   },
   codeContainer: {
     alignItems: 'flex-end',
+    minWidth: 120,
   },
   code: {
     color: '#1a73e8',
