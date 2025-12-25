@@ -1,41 +1,33 @@
 {
   "project_info": {
-    "project_number": "986130014906",
-    "project_id": "authenticator-9efd6",
-    "storage_bucket": "authenticator-9efd6.firebasestorage.app"
+    "project_number": "680795358184",
+    "project_id": "coolauthenticator",
+    "storage_bucket": "coolauthenticator.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:986130014906:android:0881a66277e9be4ff99883",
+        "mobilesdk_app_id": "1:680795358184:android:b873037ac7e6593a945a5d",
         "android_client_info": {
           "package_name": "com.fzeetechz.authenticator"
         }
       },
       "oauth_client": [
         {
-          "client_id": "986130014906-t3bu0m7iepiheokemsarcalcvv4j3dtl.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.fzeetechz.authenticator",
-            "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
-          }
-        },
-        {
-          "client_id": "986130014906-avkmj0at29rm00kmdltpskmh2t58k36d.apps.googleusercontent.com",
+          "client_id": "680795358184-p944hvnlrtkigc8fgidr937qm787s58q.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyAf-xKjNCO8wczej_GHxARLIcPq2aCaet4"
+          "current_key": "AIzaSyCT1tir6ZI9eZnQ4gJmM9cQTG-JCZDj9dI"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "986130014906-avkmj0at29rm00kmdltpskmh2t58k36d.apps.googleusercontent.com",
+              "client_id": "680795358184-p944hvnlrtkigc8fgidr937qm787s58q.apps.googleusercontent.com",
               "client_type": 3
             }
           ]
