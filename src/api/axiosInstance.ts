@@ -25,7 +25,7 @@ api.interceptors.request.use(
 );
 
 api.interceptors.response.use(
-  (response) => response,
+  (response) => response.data,
   async (error) => {
     if (error.response) {
       // Backend responded with status code

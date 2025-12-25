@@ -1,8 +1,11 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { generateTOTP } from '@/src/utils/totp';
+import { signOut } from '@react-native-firebase/auth';
 import auth from '@react-native-firebase/auth';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import { router } from 'expo-router';
+import {loginwithGoogleApi} from '../api/apiCall'
 
 const AuthContext = createContext<any>(null);
 
@@ -27,13 +30,21 @@ export function AuthProvider({ children }: any) {
     return unsubscribe;
   }, []);
 
+
+
   const login = async () => {
     try {
       await GoogleSignin.hasPlayServices();
       const data = await GoogleSignin.signIn();
       const idToken = data?.data?.idToken;
+      const isValid =await  loginwithGoogleApi(idToken)
+
+    if(isValid?.success){
       const googleCredential = auth.GoogleAuthProvider.credential(idToken);
       await auth().signInWithCredential(googleCredential);
+
+    }
+   
       // Navigation will happen automatically via auth state change
     } catch (error) {
       console.log('Login Error:', error);
@@ -43,9 +54,14 @@ export function AuthProvider({ children }: any) {
   const logout = async () => {
     try {
       await GoogleSignin.signOut();
-      await auth().signOut();
+      await signOut(auth());
+      router.replace('/login');
     } catch (error) {
       console.log('Logout Error:', error);
+      // Force logout even if there's an error
+      setUser(null);
+      setIsLoggedIn(false);
+      router.replace('/login');
     }
   };
 

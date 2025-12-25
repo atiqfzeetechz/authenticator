@@ -1,5 +1,5 @@
-import { View, FlatList, StyleSheet, TouchableOpacity, Text } from 'react-native';
-import { useState, useEffect } from 'react';
+import { View, FlatList, StyleSheet, TouchableOpacity, Text, Image } from 'react-native';
+import { useState } from 'react';
 import OTPCard from '@/src/components/OTPCard';
 import AddAccountModal from '@/src/components/AddAccountModal';
 import { useAuth } from '@/src/context/AuthContext';
@@ -8,13 +8,12 @@ import { useFocusEffect } from '@react-navigation/native';
 
 export default function HomeScreen() {
   const [visible, setVisible] = useState(false);
-  const { accounts, codes, remaining, isLoggedIn, logout } = useAuth();
+  const { accounts, codes, remaining, isLoggedIn, user } = useAuth();
 
   useFocusEffect(() => {
     if (isLoggedIn === false) {
       router.replace('/login');
     } else if (isLoggedIn === true) {
-      // Force re-render when logged in
       console.log('User is logged in, showing codes screen');
     }
   });
@@ -35,18 +34,25 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.headerContainer}>
-        <Text style={styles.header}>Authenticator</Text>
-        <View style={styles.headerRight}>
-          <Text style={styles.timer}>{remaining}s</Text>
-          <TouchableOpacity onPress={logout} style={styles.logoutBtn}>
-            <Text style={styles.logoutText}>Logout</Text>
-          </TouchableOpacity>
-        </View>
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Cool Authenticator</Text>
+        <TouchableOpacity 
+          style={styles.profileButton}
+          onPress={() => router.push('/profile')}
+        >
+          <Image 
+            source={{ uri: user?.photoURL || 'https://via.placeholder.com/40' }}
+            style={styles.profileImage}
+          />
+        </TouchableOpacity>
       </View>
 
       <View style={styles.progressBarContainer}>
         <View style={[styles.progressBar, { width: `${progress * 100}%` }]} />
+      </View>
+
+      <View style={styles.timerContainer}>
+        <Text style={styles.timer}>{remaining}s</Text>
       </View>
 
       <FlatList
@@ -93,32 +99,31 @@ const styles = StyleSheet.create({
     backgroundColor: '#000',
     paddingTop: 50,
   },
-  headerContainer: {
+  header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingBottom: 10,
+    paddingBottom: 15,
   },
-  headerRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  logoutBtn: {
-    backgroundColor: '#333',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 6,
-  },
-  logoutText: {
-    color: '#fff',
-    fontSize: 12,
-  },
-  header: {
-    fontSize: 28,
+  headerTitle: {
+    fontSize: 24,
     fontWeight: 'bold',
     color: '#fff',
+  },
+  profileButton: {
+    padding: 2,
+  },
+  profileImage: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    borderWidth: 2,
+    borderColor: '#1a73e8',
+  },
+  timerContainer: {
+    alignItems: 'center',
+    marginBottom: 10,
   },
   timer: {
     fontSize: 18,
