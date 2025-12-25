@@ -23,7 +23,7 @@
         "android.permission.CAMERA",
         "android.permission.RECORD_AUDIO"
       ],
-      "package": "com.fzeetechz.authenticator",
+      "package": "com.authenticator.fzeetechz",
       "googleServicesFile": "./google-services.json"
 
     },

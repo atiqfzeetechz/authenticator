@@ -2,11 +2,16 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import GoogleLogin from '@/src/googlelogin/GoogleLoginFixed';
+import { useAuth } from '@/src/context/AuthContext';
+import { useEffect } from 'react';
 
 export default function LoginScreen() {
-  const handleSkip = () => {
-    router.replace('/');
-  };
+  const {isLoggedIn}=useAuth()
+useEffect(()=>{
+  if(isLoggedIn){
+    router.replace('/')
+  }
+},[isLoggedIn])
 
   return (
     <View style={styles.container}>

@@ -1,129 +1,183 @@
-import React, { useEffect } from "react";
-import { TouchableOpacity, Text, StyleSheet, View, Alert } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
-import * as WebBrowser from "expo-web-browser";
-import * as Google from "expo-auth-session/providers/google";
-import { GoogleAuthProvider, signInWithCredential } from "firebase/auth";
-import { auth } from "./firebase";
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import axios from 'axios';
-import { router } from 'expo-router';
-import api from "../api/axiosInstance";
+import { StyleSheet, Text, View, TouchableOpacity, Dimensions } from 'react-native'
+import React from 'react'
+import { GoogleSigninButton } from '@react-native-google-signin/google-signin';
+import { useAuth } from '../context/AuthContext';
 
-WebBrowser.maybeCompleteAuthSession();
+const { width } = Dimensions.get('window');
 
-export default function GoogleLogin() {
-  const [request, response, promptAsync] = Google.useAuthRequest({
-    expoClientId: "986130014906-avkmj0at29rm00kmdltpskmh2t58k36d.apps.googleusercontent.com",
-    androidClientId: "986130014906-t3bu0m7iepiheokemsarcalcvv4j3dtl.apps.googleusercontent.com",
-    selectAccount: true,
-    redirectUri: "https://authenticator-9efd6.firebaseapp.com",
-  });
+export default function GoogleLoginFixed() {
+  const { login, isLoggedIn } = useAuth();
 
-
-
-
-  useEffect(() => {
-    if (response?.type === "success") {
-      const { id_token } = response.params;
-
-      if (!id_token) {
-        console.log("No id_token received");
-        return;
-      }
-
-      const credential = GoogleAuthProvider.credential(id_token);
-      signInWithFirebase(credential);
-    }
-  }, [response]);
-
-  const signInWithFirebase = async (credential: any) => {
-    try {
-      const userCred = await signInWithCredential(auth, credential);
-      const firebaseToken = await userCred.user.getIdToken();
-      
-      const userData = {
-        // uid: userCred.user.uid,
-        // email: userCred.user.email,
-        // name: userCred.user.displayName,
-        // photo: userCred.user.photoURL,
-        token: firebaseToken
-      };
-
-      // Save to AsyncStorage
-      await AsyncStorage.setItem('user', JSON.stringify(userData));
-      
-      // Send to backend
-      await saveToBackend(userData);
-      
-      Alert.alert("Login Success", `Welcome ${userCred.user.displayName}`);
-      
-      // Navigate to home screen
-      router.replace('/');
-    } catch (err) {
-      console.error("Firebase Google Login Error", err);
-      Alert.alert("Login Failed", "Please try again");
-    }
-  };
-
-  const saveToBackend = async (userData: any) => {
-    try {
-      const response = await api.post('/api/auth/login/google', {
-        // uid: userData.uid,
-        // email: userData.email,
-        // name: userData.name,
-        // photo: userData.photo,
-        firebase_token: userData.token
-      }, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${userData.token}`
-        }
-      });
-      
-      console.log('Backend response:', response.data);
-      
-      // Save backend token if provided
-      if (response.data.access_token) {
-        await AsyncStorage.setItem('access_token', response.data.access_token);
-      }
-    } catch (error) {
-      console.error('Backend save error:', error);
-      // Continue even if backend fails
-    }
-  };
+  if (isLoggedIn) {
+    return (
+      <View style={styles.successContainer}>
+        <View style={styles.successIconContainer}>
+          <Text style={styles.successIcon}>✓</Text>
+        </View>
+        <Text style={styles.successTitle}>Login Successful!</Text>
+        <Text style={styles.successSubtitle}>You are now logged in with Google</Text>
+        <View style={styles.successBadge}>
+          <Text style={styles.successBadgeText}>ACTIVE SESSION</Text>
+        </View>
+      </View>
+    )
+  }
 
   return (
-    <TouchableOpacity
-      style={styles.button}
-      disabled={!request}
-      onPress={() => promptAsync()}
-    >
-      <View style={styles.buttonContent}>
-        <Ionicons name="logo-google" size={20} color="#fff" />
+    <View style={styles.container}>
+      {/* Custom Styled Button Alternative */}
+      <TouchableOpacity 
+        style={styles.customButton}
+        onPress={login}
+        activeOpacity={0.8}
+      >
+        <View style={styles.googleIconContainer}>
+          <Text style={styles.googleIcon}>G</Text>
+        </View>
         <Text style={styles.buttonText}>Continue with Google</Text>
-      </View>
-    </TouchableOpacity>
+      </TouchableOpacity>
+      
+      {/* OR use the default GoogleSigninButton with better styling */}
+      {/* 
+      <GoogleSigninButton
+        style={styles.googleButton}
+        size={GoogleSigninButton.Size.Wide}
+        color={GoogleSigninButton.Color.Dark}
+        onPress={login}
+      />
+      */}
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  button: {
-    backgroundColor: "#1a73e8",
-    paddingVertical: 16,
-    paddingHorizontal: 24,
-    borderRadius: 12,
-    marginVertical: 8,
+  container: {
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 20,
   },
-  buttonContent: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
+  
+  // Custom Button Styles
+  customButton: {
+    width: width - 100,
+    height: 56,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 50,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1.5,
+    borderColor: '#E0E0E0',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+    marginVertical: 10,
   },
+  
+  googleIconContainer: {
+    width: 36,
+    height: 36,
+    backgroundColor: '#4285F4',
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  
+  googleIcon: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: 'bold',
+    fontFamily: 'System',
+  },
+  
   buttonText: {
-    color: "#fff",
     fontSize: 16,
-    fontWeight: "600",
-    marginLeft: 12,
+    fontWeight: '600',
+    color: '#3C4043',
+    letterSpacing: 0.3,
+  },
+  
+  // GoogleSigninButton Custom Styles
+  googleButton: {
+    width: width - 40,
+    height: 56,
+    borderRadius: 12,
+    alignSelf: 'center',
+    marginVertical: 10,
+  },
+  
+  // Success State Styles
+  successContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 24,
+    backgroundColor: '#F0F9FF',
+    borderRadius: 16,
+    borderWidth: 1.5,
+    borderColor: '#B8E1FF',
+    marginHorizontal: 20,
+  },
+  
+  successIconContainer: {
+    width: 80,
+    height: 80,
+    backgroundColor: '#10B981',
+    borderRadius: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+    shadowColor: '#10B981',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  
+  successIcon: {
+    color: '#FFFFFF',
+    fontSize: 40,
+    fontWeight: 'bold',
+  },
+  
+  successTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#111827',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  
+  successSubtitle: {
+    fontSize: 16,
+    color: '#6B7280',
+    textAlign: 'center',
+    marginBottom: 20,
+    lineHeight: 22,
+  },
+  
+  successBadge: {
+    backgroundColor: '#D1FAE5',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#A7F3D0',
+  },
+  
+  successBadgeText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#065F46',
+    letterSpacing: 0.5,
   },
 });

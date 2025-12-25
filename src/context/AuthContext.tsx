@@ -1,20 +1,62 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { generateTOTP } from '@/src/utils/totp';
+import auth from '@react-native-firebase/auth';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
 
 const AuthContext = createContext<any>(null);
 
 export function AuthProvider({ children }: any) {
+  const [user, setUser] = useState(null);
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
   const [accounts, setAccounts] = useState<any[]>([]);
   const [codes, setCodes] = useState<Record<string, string>>({});
   const [remaining, setRemaining] = useState(30);
 
-  // 🔁 Load accounts from AsyncStorage on mount
+  // Auth state listener
   useEffect(() => {
-    AsyncStorage.getItem('accounts').then(res => {
-      if (res) setAccounts(JSON.parse(res));
+    GoogleSignin.configure({
+      webClientId: '680795358184-ouc9homjarr9qh9kjvji01thvieluuve.apps.googleusercontent.com',
+      offlineAccess: true,
     });
+    
+    const unsubscribe = auth().onAuthStateChanged((user) => {
+      setUser(user);
+      setIsLoggedIn(!!user);
+    });
+    return unsubscribe;
   }, []);
+
+  const login = async () => {
+    try {
+      await GoogleSignin.hasPlayServices();
+      const data = await GoogleSignin.signIn();
+      const idToken = data?.data?.idToken;
+      const googleCredential = auth.GoogleAuthProvider.credential(idToken);
+      await auth().signInWithCredential(googleCredential);
+      // Navigation will happen automatically via auth state change
+    } catch (error) {
+      console.log('Login Error:', error);
+    }
+  };
+
+  const logout = async () => {
+    try {
+      await GoogleSignin.signOut();
+      await auth().signOut();
+    } catch (error) {
+      console.log('Logout Error:', error);
+    }
+  };
+
+  // Load accounts from AsyncStorage on mount
+  useEffect(() => {
+    if (isLoggedIn) {
+      AsyncStorage.getItem('accounts').then(res => {
+        if (res) setAccounts(JSON.parse(res));
+      });
+    }
+  }, [isLoggedIn]);
 
   // 🔁 OTP regeneration every second
   useEffect(() => {
@@ -62,7 +104,17 @@ export function AuthProvider({ children }: any) {
   };
 
   return (
-    <AuthContext.Provider value={{ accounts, codes, remaining, addAccount, clearAccounts }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      isLoggedIn, 
+      login, 
+      logout, 
+      accounts, 
+      codes, 
+      remaining, 
+      addAccount, 
+      clearAccounts 
+    }}>
       {children}
     </AuthContext.Provider>
   );

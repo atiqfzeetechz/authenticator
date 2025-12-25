@@ -1,43 +1,29 @@
 import { View, FlatList, StyleSheet, TouchableOpacity, Text } from 'react-native';
-import { useState, useEffect, useCallback } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useState, useEffect } from 'react';
 import OTPCard from '@/src/components/OTPCard';
 import AddAccountModal from '@/src/components/AddAccountModal';
 import { useAuth } from '@/src/context/AuthContext';
-import { generateTOTP, getTimeRemaining } from '@/src/utils/totp';
 import { router } from 'expo-router';
+import { useFocusEffect } from '@react-navigation/native';
 
 export default function HomeScreen() {
   const [visible, setVisible] = useState(false);
-  const [codes, setCodes] = useState<{ [id: string]: string }>({});
-  const [timeRemaining, setTimeRemaining] = useState(getTimeRemaining());
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
-  const { accounts } = useAuth();
+  const { accounts, codes, remaining, isLoggedIn, logout } = useAuth();
 
-  // Check login status
-  useEffect(() => {
-    checkLoginStatus();
-  }, []);
-
-  const checkLoginStatus = async () => {
-    try {
-      const user = await AsyncStorage.getItem('user');
-      if (user) {
-        setIsLoggedIn(true);
-      } else {
-        setIsLoggedIn(false);
-        router.replace('/login');
-        return;
-      }
-    } catch (error) {
-      setIsLoggedIn(false);
+  useFocusEffect(() => {
+    if (isLoggedIn === false) {
       router.replace('/login');
-      return;
+    } else if (isLoggedIn === true) {
+      // Force re-render when logged in
+      console.log('User is logged in, showing codes screen');
     }
-  };
+  });
 
-  // Show loading while checking login
-  if (isLoggedIn === null || isLoggedIn === false) {
+  if (isLoggedIn === false) {
+    return null;
+  }
+
+  if (isLoggedIn === null) {
     return (
       <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
         <Text style={{ color: '#fff', fontSize: 18 }}>Loading...</Text>
@@ -45,60 +31,20 @@ export default function HomeScreen() {
     );
   }
 
-  // 🔁 Update time remaining every second
-  useEffect(() => {
-    if (isLoggedIn !== true) return;
-    
-    const interval = setInterval(() => {
-      const remaining = getTimeRemaining();
-      setTimeRemaining(remaining);
-      
-      // Regenerate OTP when time resets (every 30 seconds)
-      if (remaining === 30) {
-        updateAllCodes();
-      }
-    }, 1000);
-    
-    return () => clearInterval(interval);
-  }, [accounts, isLoggedIn]);
-
-  // 🔁 Update all OTP codes
-  const updateAllCodes = useCallback(async () => {
-    if (isLoggedIn !== true) return;
-    
-    const newCodes: { [id: string]: string } = {};
-    
-    for (const acc of accounts) {
-      try {
-        const code = generateTOTP(acc.secret);
-        newCodes[acc.id] = code;
-      } catch (error) {
-        console.error(`Error generating OTP for ${acc.name}:`, error);
-        newCodes[acc.id] = '------';
-      }
-    }
-    
-    setCodes(newCodes);
-  }, [accounts, isLoggedIn]);
-
-  // 🔁 Initial and account change update
-  useEffect(() => {
-    if (isLoggedIn === true) {
-      updateAllCodes();
-    }
-  }, [updateAllCodes, isLoggedIn]);
-
-  // Calculate progress for progress bar (0 to 1)
-  const progress = 1 - (timeRemaining / 30);
+  const progress = 1 - (remaining / 30);
 
   return (
     <View style={styles.container}>
       <View style={styles.headerContainer}>
         <Text style={styles.header}>Authenticator</Text>
-        <Text style={styles.timer}>{timeRemaining}s</Text>
+        <View style={styles.headerRight}>
+          <Text style={styles.timer}>{remaining}s</Text>
+          <TouchableOpacity onPress={logout} style={styles.logoutBtn}>
+            <Text style={styles.logoutText}>Logout</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
-      {/* Progress Bar */}
       <View style={styles.progressBarContainer}>
         <View style={[styles.progressBar, { width: `${progress * 100}%` }]} />
       </View>
@@ -112,7 +58,7 @@ export default function HomeScreen() {
             issuer={item.name}
             account={item.email || item.issuer || ''}
             code={codes[item.id] || '------'}
-            timeRemaining={timeRemaining}
+            timeRemaining={remaining}
           />
         )}
         ListEmptyComponent={
@@ -153,6 +99,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingBottom: 10,
+  },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  logoutBtn: {
+    backgroundColor: '#333',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
+  },
+  logoutText: {
+    color: '#fff',
+    fontSize: 12,
   },
   header: {
     fontSize: 28,
