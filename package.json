@@ -19,7 +19,7 @@
     "axios": "^1.13.2",
     "base32-decode": "^1.0.0",
     "crypto-js": "^4.2.0",
-    "expo": "~54.0.30",
+    "expo": "^54.0.30",
     "expo-auth-session": "~7.0.10",
     "expo-camera": "^17.0.10",
     "expo-constants": "~18.0.12",
