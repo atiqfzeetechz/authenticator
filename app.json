@@ -15,7 +15,6 @@
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
-      
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
@@ -25,7 +24,6 @@
       ],
       "package": "com.authenticator.fzeetechz",
       "googleServicesFile": "./google-services.json"
-
     },
     "web": {
       "output": "static",
@@ -62,3 +60,4 @@
     }
   }
 }
+

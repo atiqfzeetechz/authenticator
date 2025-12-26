@@ -12,6 +12,7 @@ const AuthContext = createContext<any>(null);
 export function AuthProvider({ children }: any) {
   const [user, setUser] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
+  const [allUserAccounts, setAllUserAccounts] = useState<any>({});
   const [accounts, setAccounts] = useState<any[]>([]);
   const [codes, setCodes] = useState<Record<string, string>>({});
   const [remaining, setRemaining] = useState(30);
@@ -40,6 +41,7 @@ export function AuthProvider({ children }: any) {
       const isValid =await  loginwithGoogleApi(idToken)
 
     if(isValid?.success){
+      const token = AsyncStorage.setItem('jwt_token',isValid?.token)
       const googleCredential = auth.GoogleAuthProvider.credential(idToken);
       await auth().signInWithCredential(googleCredential);
 
@@ -67,12 +69,27 @@ export function AuthProvider({ children }: any) {
 
   // Load accounts from AsyncStorage on mount
   useEffect(() => {
-    if (isLoggedIn) {
-      AsyncStorage.getItem('accounts').then(res => {
-        if (res) setAccounts(JSON.parse(res));
-      });
+    if (isLoggedIn && user?.email) {
+      console.log(user.email)
+      loadAllUserAccounts();
     }
-  }, [isLoggedIn]);
+  }, [isLoggedIn, user?.email]);
+
+  const loadAllUserAccounts = async () => {
+    try {
+      const stored = await AsyncStorage.getItem('allUserAccounts');
+      if (stored) {
+        const allAccounts = JSON.parse(stored);
+        setAllUserAccounts(allAccounts);
+        // Set current user's accounts
+        if (user?.email && allAccounts[user.email]) {
+          setAccounts(allAccounts[user.email]);
+        }
+      }
+    } catch (error) {
+      console.log('Error loading accounts:', error);
+    }
+  };
 
   // 🔁 OTP regeneration every second
   useEffect(() => {
@@ -96,28 +113,59 @@ export function AuthProvider({ children }: any) {
 
   // 🔁 Add new account
   const addAccount = async (acc: any) => {
-    // Check for duplicates by secret
+    if (!user?.email) return;
+    
+    const userEmail = user.email;
     let name = acc.name;
-    const sameSecrets = accounts.filter(a => a.secret === acc.secret);
+    const currentUserAccounts = allUserAccounts[userEmail] || [];
+    const sameSecrets = currentUserAccounts.filter((a: any) => a.secret === acc.secret);
 
     if (sameSecrets.length > 0) {
-      // Add numbering if duplicate
       const count = sameSecrets.length + 1;
       name = `${acc.name} (${count})`;
     }
 
     const newAcc = { ...acc, name };
-    const updated = [...accounts, newAcc];
-    setAccounts(updated);
-    await AsyncStorage.setItem('accounts', JSON.stringify(updated));
+    const updatedUserAccounts = [...currentUserAccounts, newAcc];
+    
+    // Update allUserAccounts structure
+    const updatedAllAccounts = {
+      ...allUserAccounts,
+      [userEmail]: updatedUserAccounts
+    };
+    
+    setAllUserAccounts(updatedAllAccounts);
+    setAccounts(updatedUserAccounts);
+    await AsyncStorage.setItem('allUserAccounts', JSON.stringify(updatedAllAccounts));
   };
 
   // 🔁 Clear all accounts
   const clearAccounts = async () => {
+    if (!user?.email) return;
+    
+    const userEmail = user.email;
+    const updatedAllAccounts = {
+      ...allUserAccounts,
+      [userEmail]: []
+    };
+    
+    setAllUserAccounts(updatedAllAccounts);
     setAccounts([]);
     setCodes({});
-    await AsyncStorage.removeItem('accounts');
+    await AsyncStorage.setItem('allUserAccounts', JSON.stringify(updatedAllAccounts));
   };
+
+  // Switch user accounts
+  const switchToUser = async (email: string) => {
+    if (allUserAccounts[email]) {
+      setAccounts(allUserAccounts[email]);
+    } else {
+      setAccounts([]);
+    }
+  };
+
+  console.log(allUserAccounts)
+
 
   return (
     <AuthContext.Provider value={{ 
@@ -129,7 +177,9 @@ export function AuthProvider({ children }: any) {
       codes, 
       remaining, 
       addAccount, 
-      clearAccounts 
+      clearAccounts,
+      allUserAccounts,
+      switchToUser
     }}>
       {children}
     </AuthContext.Provider>

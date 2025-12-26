@@ -1,14 +1,25 @@
 import { View, FlatList, StyleSheet, TouchableOpacity, Text, Image } from 'react-native';
-import { useState } from 'react';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useEffect, useState } from 'react';
 import OTPCard from '@/src/components/OTPCard';
 import AddAccountModal from '@/src/components/AddAccountModal';
 import { useAuth } from '@/src/context/AuthContext';
 import { router } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
+import { getAllCodes } from '@/src/api/apiCall';
+import useNetwork from './../src/hooks/useNetwork'
 
 export default function HomeScreen() {
   const [visible, setVisible] = useState(false);
   const { accounts, codes, remaining, isLoggedIn, user } = useAuth();
+  const net = useNetwork()
+
+  useEffect(() => {
+    (async () => {
+      const res = await getAllCodes()
+      console.log(res)
+    })()
+  }, [])
 
   useFocusEffect(() => {
     if (isLoggedIn === false) {
@@ -33,14 +44,14 @@ export default function HomeScreen() {
   const progress = 1 - (remaining / 30);
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Cool Authenticator</Text>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.profileButton}
           onPress={() => router.push('/profile')}
         >
-          <Image 
+          <Image
             source={{ uri: user?.photoURL || 'https://via.placeholder.com/40' }}
             style={styles.profileImage}
           />
@@ -60,7 +71,7 @@ export default function HomeScreen() {
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContent}
         renderItem={({ item }) => (
-          <OTPCard 
+          <OTPCard
             issuer={item.name}
             account={item.email || item.issuer || ''}
             code={codes[item.id] || '------'}
@@ -77,27 +88,26 @@ export default function HomeScreen() {
         }
       />
 
-      <TouchableOpacity 
-        style={styles.fab} 
+      <TouchableOpacity
+        style={styles.fab}
         onPress={() => setVisible(true)}
         activeOpacity={0.8}
       >
         <Text style={styles.plus}>＋</Text>
       </TouchableOpacity>
 
-      <AddAccountModal 
-        visible={visible} 
-        onClose={() => setVisible(false)} 
+      <AddAccountModal
+        visible={visible}
+        onClose={() => setVisible(false)}
       />
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { 
-    flex: 1, 
+  container: {
+    flex: 1,
     backgroundColor: '#000',
-    paddingTop: 50,
   },
   header: {
     flexDirection: 'row',

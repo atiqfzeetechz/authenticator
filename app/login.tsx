@@ -1,4 +1,5 @@
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import GoogleLogin from '@/src/googlelogin/GoogleLoginFixed';
@@ -14,7 +15,7 @@ useEffect(()=>{
 },[isLoggedIn])
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Ionicons name="shield-checkmark" size={80} color="#1a73e8" />
         <Text style={styles.title}>Authenticator</Text>
@@ -27,12 +28,8 @@ useEffect(()=>{
         </Text>
         
         <GoogleLogin />
-        
-        {/* <TouchableOpacity style={styles.skipButton} onPress={handleSkip}>
-          <Text style={styles.skipText}>Continue without login</Text>
-        </TouchableOpacity> */}
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
 
