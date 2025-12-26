@@ -54,7 +54,8 @@ const styles = StyleSheet.create({
   issuer: {
     color: '#fff',
     fontSize: 18,
-    fontWeight: '600',
+    // fontWeight: '600',
+    fontFamily:"RobotoMedium"
   },
   account: {
     color: '#888',
@@ -68,7 +69,8 @@ const styles = StyleSheet.create({
   code: {
     color: '#1a73e8',
     fontSize: 28,
-    fontWeight: 'bold',
+    // fontWeight: 'bold',
+    fontFamily:"RobotoMedium",                 
     letterSpacing: 4,
   },
   codeSubtext: {

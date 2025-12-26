@@ -159,13 +159,13 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingBottom: 15,
+    paddingBottom: 6,
   },
   headerTitle: {
     fontSize: 24,
-    fontWeight: 'bold',
+    // fontWeight: 'bold',
     color: '#fff',
-    fontFamily: 'RobotoCondensed-Bold',
+    fontFamily: 'RobotoCondensed-SemiBold',
   },
   profileButton: {
     padding: 2,

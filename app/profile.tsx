@@ -4,6 +4,7 @@ import { useAuth } from '@/src/context/AuthContext';
 import { router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, MaterialIcons, Feather, FontAwesome } from '@expo/vector-icons';
+import Constants from 'expo-constants';
 
 export default function ProfileScreen() {
   const { user, logout } = useAuth();
@@ -28,14 +29,14 @@ export default function ProfileScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#0a0a0a" />
-      
+
       <LinearGradient
         colors={['#0a0a0a', '#1a1a1a']}
         style={styles.background}
       >
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.backButton}
             onPress={() => router.back()}
           >
@@ -47,7 +48,7 @@ export default function ProfileScreen() {
           </TouchableOpacity>
         </View>
 
-        <ScrollView 
+        <ScrollView
           style={styles.content}
           showsVerticalScrollIndicator={false}
         >
@@ -61,7 +62,7 @@ export default function ProfileScreen() {
             >
               <View style={styles.profileHeader}>
                 <View style={styles.avatarContainer}>
-                  <Image 
+                  <Image
                     source={{ uri: user?.photoURL || 'https://via.placeholder.com/120' }}
                     style={styles.avatar}
                   />
@@ -71,7 +72,7 @@ export default function ProfileScreen() {
                 </View>
                 <Text style={styles.userName}>{user?.displayName || 'Guest User'}</Text>
                 <Text style={styles.userEmail}>{user?.email || 'user@example.com'}</Text>
-                
+
                 <View style={styles.statsContainer}>
                   <View style={styles.statItem}>
                     <Text style={styles.statNumber}>01</Text>
@@ -90,54 +91,54 @@ export default function ProfileScreen() {
           {/* Account Information */}
           <View style={styles.sectionContainer}>
             <Text style={styles.sectionTitle}>Account Information</Text>
-            
+
             <View style={styles.infoCard}>
               <InfoRow
                 icon={<MaterialIcons name="person-outline" size={20} color="#1a73e8" />}
                 label="Display Name"
                 value={user?.displayName || 'Not set'}
               />
-              
+
               <InfoRow
                 icon={<MaterialIcons name="email" size={20} color="#1a73e8" />}
                 label="Email Address"
                 value={user?.email || 'N/A'}
               />
-              
+
               <InfoRow
                 icon={<Ionicons name="shield-checkmark" size={20} color="#1a73e8" />}
                 label="Email Verified"
                 value={user?.emailVerified ? 'Verified' : 'Not Verified'}
                 color={user?.emailVerified ? '#10B981' : '#EF4444'}
               />
-              
+
               <InfoRow
                 icon={<Feather name="phone" size={20} color="#1a73e8" />}
                 label="Phone Number"
                 value={user?.phoneNumber || 'Not added'}
               />
-              
+
               <InfoRow
                 icon={<FontAwesome name="google" size={20} color="#1a73e8" />}
                 label="Provider"
                 value={user?.providerData?.[0]?.providerId === 'google.com' ? 'Google' : 'Other'}
               />
-              
+
               <InfoRow
                 icon={<MaterialIcons name="date-range" size={20} color="#1a73e8" />}
                 label="Member Since"
-                value={user?.metadata?.creationTime ? 
+                value={user?.metadata?.creationTime ?
                   new Date(user.metadata.creationTime).toLocaleDateString('en-US', {
                     year: 'numeric',
                     month: 'long',
                     day: 'numeric'
                   }) : 'N/A'}
               />
-              
+
               <InfoRow
                 icon={<Ionicons name="time-outline" size={20} color="#1a73e8" />}
                 label="Last Active"
-                value={user?.metadata?.lastSignInTime ? 
+                value={user?.metadata?.lastSignInTime ?
                   new Date(user.metadata.lastSignInTime).toLocaleDateString('en-US', {
                     month: 'short',
                     day: 'numeric',
@@ -151,7 +152,7 @@ export default function ProfileScreen() {
           {/* Quick Actions */}
           <View style={styles.sectionContainer}>
             <Text style={styles.sectionTitle}>Quick Actions</Text>
-            
+
             <View style={styles.actionsGrid}>
               <TouchableOpacity style={styles.actionButton}>
                 <View style={[styles.actionIcon, { backgroundColor: 'rgba(26, 115, 232, 0.1)' }]}>
@@ -159,21 +160,21 @@ export default function ProfileScreen() {
                 </View>
                 <Text style={styles.actionText}>Settings</Text>
               </TouchableOpacity>
-              
+
               <TouchableOpacity style={styles.actionButton}>
                 <View style={[styles.actionIcon, { backgroundColor: 'rgba(16, 185, 129, 0.1)' }]}>
                   <Ionicons name="shield-checkmark-outline" size={24} color="#10B981" />
                 </View>
                 <Text style={styles.actionText}>Privacy</Text>
               </TouchableOpacity>
-              
+
               <TouchableOpacity style={styles.actionButton}>
                 <View style={[styles.actionIcon, { backgroundColor: 'rgba(139, 92, 246, 0.1)' }]}>
                   <Ionicons name="help-circle-outline" size={24} color="#8B5CF6" />
                 </View>
                 <Text style={styles.actionText}>Help</Text>
               </TouchableOpacity>
-              
+
               <TouchableOpacity style={styles.actionButton}>
                 <View style={[styles.actionIcon, { backgroundColor: 'rgba(245, 158, 11, 0.1)' }]}>
                   <Ionicons name="star-outline" size={24} color="#F59E0B" />
@@ -184,7 +185,7 @@ export default function ProfileScreen() {
           </View>
 
           {/* Logout Button */}
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.logoutButton}
             onPress={handleLogout}
             activeOpacity={0.9}
@@ -202,7 +203,7 @@ export default function ProfileScreen() {
 
           {/* Version Info */}
           <View style={styles.versionContainer}>
-            <Text style={styles.versionText}>v1.0.0 • © 2024 Cool Authenticator</Text>
+            <Text style={styles.versionText}>v{Constants.expoConfig?.version} • ©  Cool Authenticator</Text>
           </View>
         </ScrollView>
       </LinearGradient>
@@ -238,7 +239,8 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 18,
-    fontWeight: '700',
+    // fontWeight: '700',
+    fontFamily: "RobotoMedium",
     color: '#fff',
     letterSpacing: 0.5,
   },
@@ -292,7 +294,8 @@ const styles = StyleSheet.create({
   },
   userName: {
     fontSize: 24,
-    fontWeight: '700',
+    // fontWeight: '700',
+    fontFamily: "RobotoCondensed-SemiBold",
     color: '#fff',
     marginBottom: 4,
     textAlign: 'center',
@@ -301,6 +304,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: 'rgba(255, 255, 255, 0.7)',
     marginBottom: 20,
+    fontFamily: "RobotoCondensed-Light",
   },
   statsContainer: {
     flexDirection: 'row',
@@ -320,12 +324,14 @@ const styles = StyleSheet.create({
   },
   statNumber: {
     fontSize: 18,
-    fontWeight: '700',
+    // fontWeight: '700',
+    fontFamily:"RobotoMedium",
     color: '#fff',
   },
   statLabel: {
     fontSize: 12,
     color: 'rgba(255, 255, 255, 0.6)',
+    fontFamily:"RobotoMedium",
     marginTop: 2,
   },
   sectionContainer: {
@@ -334,10 +340,11 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 16,
-    fontWeight: '600',
+    
     color: '#fff',
     marginBottom: 12,
     letterSpacing: 0.5,
+    fontFamily:"RobotoMedium"
   },
   infoCard: {
     backgroundColor: '#1a1a1a',
@@ -370,11 +377,13 @@ const styles = StyleSheet.create({
   infoLabel: {
     fontSize: 14,
     color: '#888',
+    fontFamily: "RobotoCondensed-Light",
     flex: 1,
   },
   infoValue: {
     fontSize: 14,
-    fontWeight: '500',
+    // fontWeight: '500',
+    fontFamily:"RobotoMedium",
     marginLeft: 10,
   },
   actionsGrid: {
@@ -406,6 +415,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: '#fff',
     textAlign: 'center',
+     fontFamily:"RobotoMedium"
   },
   logoutButton: {
     marginHorizontal: 20,
@@ -425,6 +435,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     letterSpacing: 0.5,
+     fontFamily:"RobotoMedium"
   },
   versionContainer: {
     alignItems: 'center',
@@ -436,5 +447,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#666',
     textAlign: 'center',
+     fontFamily:"RobotoMedium"
   },
 });
