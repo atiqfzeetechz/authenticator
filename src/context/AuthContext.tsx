@@ -5,7 +5,8 @@ import { signOut } from '@react-native-firebase/auth';
 import auth from '@react-native-firebase/auth';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { router } from 'expo-router';
-import {loginwithGoogleApi} from '../api/apiCall'
+import { loginwithGoogleApi, getAllCodes } from '../api/apiCall';
+import useNetwork from '@/src/hooks/useNetwork';
 
 const AuthContext = createContext<any>(null);
 
@@ -16,6 +17,8 @@ export function AuthProvider({ children }: any) {
   const [accounts, setAccounts] = useState<any[]>([]);
   const [codes, setCodes] = useState<Record<string, string>>({});
   const [remaining, setRemaining] = useState(30);
+  const [isSynced, setIsSynced] = useState(false);
+  const isOnline = useNetwork();
 
   // Auth state listener
   useEffect(() => {
@@ -23,7 +26,7 @@ export function AuthProvider({ children }: any) {
       webClientId: '680795358184-ouc9homjarr9qh9kjvji01thvieluuve.apps.googleusercontent.com',
       offlineAccess: true,
     });
-    
+
     const unsubscribe = auth().onAuthStateChanged((user) => {
       setUser(user);
       setIsLoggedIn(!!user);
@@ -38,15 +41,15 @@ export function AuthProvider({ children }: any) {
       await GoogleSignin.hasPlayServices();
       const data = await GoogleSignin.signIn();
       const idToken = data?.data?.idToken;
-      const isValid =await  loginwithGoogleApi(idToken)
+      const isValid = await loginwithGoogleApi(idToken)
 
-    if(isValid?.success){
-      const token = AsyncStorage.setItem('jwt_token',isValid?.token)
-      const googleCredential = auth.GoogleAuthProvider.credential(idToken);
-      await auth().signInWithCredential(googleCredential);
+      if (isValid?.success) {
+        const token = AsyncStorage.setItem('jwt_token', isValid?.token)
+        const googleCredential = auth.GoogleAuthProvider.credential(idToken);
+        await auth().signInWithCredential(googleCredential);
 
-    }
-   
+      }
+
       // Navigation will happen automatically via auth state change
     } catch (error) {
       console.log('Login Error:', error);
@@ -67,27 +70,63 @@ export function AuthProvider({ children }: any) {
     }
   };
 
-  // Load accounts from AsyncStorage on mount
+  // Load accounts and sync with server
   useEffect(() => {
     if (isLoggedIn && user?.email) {
       console.log(user.email)
       loadAllUserAccounts();
+      if (isOnline) {
+        syncWithServer();
+      }
     }
-  }, [isLoggedIn, user?.email]);
+  }, [isLoggedIn, user?.email, isOnline]);
 
   const loadAllUserAccounts = async () => {
     try {
       const stored = await AsyncStorage.getItem('allUserAccounts');
+      const syncStatus = await AsyncStorage.getItem('syncStatus');
+
       if (stored) {
         const allAccounts = JSON.parse(stored);
         setAllUserAccounts(allAccounts);
-        // Set current user's accounts
         if (user?.email && allAccounts[user.email]) {
           setAccounts(allAccounts[user.email]);
         }
       }
+
+      setIsSynced(syncStatus === 'true');
     } catch (error) {
       console.log('Error loading accounts:', error);
+    }
+  };
+
+  const syncWithServer = async () => {
+    try {
+      const res = await getAllCodes();
+      if (res?.success && res?.data?.authenticators) {
+        const serverAccounts = res.data.authenticators.map((auth: any) => ({
+          id: auth.id || Date.now().toString(),
+          name: auth.appName || auth.name,
+          secret: auth.secretKey || auth.secret,
+          email: res.data.email
+        }));
+
+        const userEmail = user?.email || res.data.email;
+        const updatedAllAccounts = {
+          ...allUserAccounts,
+          [userEmail]: serverAccounts
+        };
+
+        setAllUserAccounts(updatedAllAccounts);
+        setAccounts(serverAccounts);
+
+        await AsyncStorage.setItem('allUserAccounts', JSON.stringify(updatedAllAccounts));
+        await AsyncStorage.setItem('syncStatus', 'true');
+        setIsSynced(true);
+      }
+    } catch (error) {
+      console.log('Sync failed:', error);
+      setIsSynced(false);
     }
   };
 
@@ -114,7 +153,7 @@ export function AuthProvider({ children }: any) {
   // 🔁 Add new account
   const addAccount = async (acc: any) => {
     if (!user?.email) return;
-    
+
     const userEmail = user.email;
     let name = acc.name;
     const currentUserAccounts = allUserAccounts[userEmail] || [];
@@ -127,13 +166,13 @@ export function AuthProvider({ children }: any) {
 
     const newAcc = { ...acc, name };
     const updatedUserAccounts = [...currentUserAccounts, newAcc];
-    
+
     // Update allUserAccounts structure
     const updatedAllAccounts = {
       ...allUserAccounts,
       [userEmail]: updatedUserAccounts
     };
-    
+
     setAllUserAccounts(updatedAllAccounts);
     setAccounts(updatedUserAccounts);
     await AsyncStorage.setItem('allUserAccounts', JSON.stringify(updatedAllAccounts));
@@ -142,13 +181,13 @@ export function AuthProvider({ children }: any) {
   // 🔁 Clear all accounts
   const clearAccounts = async () => {
     if (!user?.email) return;
-    
+
     const userEmail = user.email;
     const updatedAllAccounts = {
       ...allUserAccounts,
       [userEmail]: []
     };
-    
+
     setAllUserAccounts(updatedAllAccounts);
     setAccounts([]);
     setCodes({});
@@ -164,22 +203,41 @@ export function AuthProvider({ children }: any) {
     }
   };
 
-  console.log(allUserAccounts)
+  const removeAccount = async (accountId: string) => {
+    if (!user?.email) return;
+    
+    const userEmail = user.email;
+    const currentUserAccounts = allUserAccounts[userEmail] || [];
+    const updatedUserAccounts = currentUserAccounts.filter((acc: any) => acc.id !== accountId);
+    
+    const updatedAllAccounts = {
+      ...allUserAccounts,
+      [userEmail]: updatedUserAccounts
+    };
+    
+    setAllUserAccounts(updatedAllAccounts);
+    setAccounts(updatedUserAccounts);
+    await AsyncStorage.setItem('allUserAccounts', JSON.stringify(updatedAllAccounts));
+  };
+
 
 
   return (
-    <AuthContext.Provider value={{ 
-      user, 
-      isLoggedIn, 
-      login, 
-      logout, 
-      accounts, 
-      codes, 
-      remaining, 
-      addAccount, 
+    <AuthContext.Provider value={{
+      user,
+      isLoggedIn,
+      login,
+      logout,
+      accounts,
+      codes,
+      remaining,
+      addAccount,
       clearAccounts,
+      removeAccount,
       allUserAccounts,
-      switchToUser
+      switchToUser,
+      isSynced,
+      isOnline
     }}>
       {children}
     </AuthContext.Provider>

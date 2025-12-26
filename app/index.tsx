@@ -1,8 +1,11 @@
 import { View, FlatList, StyleSheet, TouchableOpacity, Text, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useEffect, useState } from 'react';
+import { Swipeable } from 'react-native-gesture-handler';
+import { Ionicons } from '@expo/vector-icons';
 import OTPCard from '@/src/components/OTPCard';
 import AddAccountModal from '@/src/components/AddAccountModal';
+import DeleteModal from '@/src/components/DeleteModal';
 import { useAuth } from '@/src/context/AuthContext';
 import { router } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
@@ -11,8 +14,32 @@ import useNetwork from './../src/hooks/useNetwork'
 
 export default function HomeScreen() {
   const [visible, setVisible] = useState(false);
-  const { accounts, codes, remaining, isLoggedIn, user } = useAuth();
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<any>(null);
+  const { accounts, codes, remaining, isLoggedIn, user, removeAccount } = useAuth();
   const net = useNetwork()
+
+  const handleDelete = (item: any) => {
+    setItemToDelete(item);
+    setDeleteModalVisible(true);
+  };
+
+  const confirmDelete = () => {
+    if (itemToDelete) {
+      removeAccount(itemToDelete.id);
+      setDeleteModalVisible(false);
+      setItemToDelete(null);
+    }
+  };
+
+  const renderRightActions = (item: any) => (
+    <TouchableOpacity 
+      style={styles.deleteButton}
+      onPress={() => handleDelete(item)}
+    >
+      <Ionicons name="trash" size={24} color="#fff" />
+    </TouchableOpacity>
+  );
 
   useEffect(() => {
     (async () => {
@@ -62,21 +89,19 @@ export default function HomeScreen() {
         <View style={[styles.progressBar, { width: `${progress * 100}%` }]} />
       </View>
 
-      <View style={styles.timerContainer}>
-        <Text style={styles.timer}>{remaining}s</Text>
-      </View>
-
       <FlatList
         data={accounts}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContent}
         renderItem={({ item }) => (
-          <OTPCard
-            issuer={item.name}
-            account={item.email || item.issuer || ''}
-            code={codes[item.id] || '------'}
-            timeRemaining={remaining}
-          />
+          <Swipeable renderRightActions={() => renderRightActions(item)}>
+            <OTPCard
+              issuer={item.name}
+              account={item.email || item.issuer || ''}
+              code={codes[item.id] || '------'}
+              timeRemaining={remaining}
+            />
+          </Swipeable>
         )}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
@@ -99,6 +124,13 @@ export default function HomeScreen() {
       <AddAccountModal
         visible={visible}
         onClose={() => setVisible(false)}
+      />
+
+      <DeleteModal
+        visible={deleteModalVisible}
+        onClose={() => setDeleteModalVisible(false)}
+        onConfirm={confirmDelete}
+        accountName={itemToDelete?.name || ''}
       />
     </SafeAreaView>
   );
@@ -190,5 +222,13 @@ const styles = StyleSheet.create({
     fontSize: 32,
     lineHeight: 36,
     marginTop: -2,
+  },
+  deleteButton: {
+    backgroundColor: '#dc3545',
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: 80,
+    marginBottom: 16,
+    borderRadius: 12,
   },
 });

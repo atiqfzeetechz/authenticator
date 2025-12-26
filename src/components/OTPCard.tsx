@@ -15,11 +15,11 @@ export default function OTPCard({ issuer, account, code, timeRemaining }: OTPCar
       <View style={styles.header}>
         <View style={styles.textContainer}>
           <Text style={styles.issuer} numberOfLines={1}>{issuer}</Text>
-          {account ? <Text style={styles.account} numberOfLines={1}>{account}</Text> : null}
+          {/* {account ? <Text style={styles.account} numberOfLines={1}>{account}</Text> : null} */}
         </View>
         <View style={styles.codeContainer}>
           <Text style={styles.code}>{code}</Text>
-          <Text style={styles.codeSubtext}>OTP</Text>
+      
         </View>
       </View>
       
@@ -27,9 +27,7 @@ export default function OTPCard({ issuer, account, code, timeRemaining }: OTPCar
         <View style={[styles.progressBar, { width: `${progress * 100}%` }]} />
       </View>
       
-      <Text style={styles.timeText}>
-        Expires in {timeRemaining}s
-      </Text>
+ 
     </View>
   );
 }

@@ -34,3 +34,5 @@ export const addCodesApi = async (appName: String, secret: String) => {
         console.log(error)
     }
 }
+
+export const deletCode =()=>{}
