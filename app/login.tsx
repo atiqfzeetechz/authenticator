@@ -46,15 +46,18 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 32,
-    fontWeight: 'bold',
+    // fontWeight: 'bold',
     color: '#fff',
     marginTop: 20,
+    fontFamily:"RobotoCondensed-SemiBold"
   },
   subtitle: {
     fontSize: 16,
     color: '#888',
     marginTop: 8,
     textAlign: 'center',
+    // fontFamily:"RobotoCondensed-Light"
+    fontFamily:"RobotoCondensed-Light"
   },
   content: {
     flex: 1,
@@ -66,6 +69,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 40,
     lineHeight: 24,
+    fontFamily:"RobotoMedium"
   },
   skipButton: {
     marginTop: 20,

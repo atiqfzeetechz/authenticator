@@ -50,6 +50,7 @@ const styles = StyleSheet.create({
   title: {
     color: '#fff',
     fontSize: 18,
-    fontWeight: '600',
+    // fontWeight: '600',
+    fontFamily:"RobotoCondensed-SemiBold"
   },
 });

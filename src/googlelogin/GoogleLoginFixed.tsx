@@ -107,6 +107,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#3C4043',
     letterSpacing: 0.3,
+    fontFamily:"RobotoCondensed-SemiBold"
   },
   
   // GoogleSigninButton Custom Styles

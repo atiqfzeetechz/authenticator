@@ -2,7 +2,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 
-const API_BASE_URL = "http://192.168.1.52:5081"; 
+const API_BASE_URL = "https://authenticator.fzeetechz.com"; 
 const api = axios.create({
   baseURL: API_BASE_URL,
   timeout: 15000,
