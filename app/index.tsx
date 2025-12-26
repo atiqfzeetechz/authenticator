@@ -9,7 +9,7 @@ import DeleteModal from '@/src/components/DeleteModal';
 import { useAuth } from '@/src/context/AuthContext';
 import { router } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
-import { getAllCodes } from '@/src/api/apiCall';
+import { deletCode, getAllCodes } from '@/src/api/apiCall';
 import useNetwork from './../src/hooks/useNetwork'
 
 export default function HomeScreen() {
@@ -17,23 +17,36 @@ export default function HomeScreen() {
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<any>(null);
   const { accounts, codes, remaining, isLoggedIn, user, removeAccount } = useAuth();
-  const net = useNetwork()
+  const isOnline = useNetwork();
 
   const handleDelete = (item: any) => {
     setItemToDelete(item);
     setDeleteModalVisible(true);
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (itemToDelete) {
-      removeAccount(itemToDelete.id);
-      setDeleteModalVisible(false);
-      setItemToDelete(null);
+      if (isOnline) {
+        const res = await deletCode(itemToDelete.secret)
+        console.log(res)
+        if (res.status) {
+          removeAccount(itemToDelete.id);
+          setDeleteModalVisible(false);
+          setItemToDelete(null);
+
+        }
+      } else {
+        removeAccount(itemToDelete.id);
+        setDeleteModalVisible(false);
+        setItemToDelete(null);
+      }
+
+      // console.log(itemToDelete)
     }
   };
 
   const renderRightActions = (item: any) => (
-    <TouchableOpacity 
+    <TouchableOpacity
       style={styles.deleteButton}
       onPress={() => handleDelete(item)}
     >
@@ -152,6 +165,7 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     color: '#fff',
+    fontFamily: 'RobotoCondensed-Bold',
   },
   profileButton: {
     padding: 2,
@@ -196,10 +210,12 @@ const styles = StyleSheet.create({
     color: '#666',
     fontSize: 18,
     marginBottom: 8,
+    fontFamily: 'RobotoCondensed-Medium',
   },
   emptySubtext: {
     color: '#444',
     fontSize: 14,
+    fontFamily: 'RobotoCondensed-Regular',
   },
   fab: {
     position: 'absolute',

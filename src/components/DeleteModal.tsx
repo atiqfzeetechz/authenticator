@@ -65,6 +65,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#fff',
     marginBottom: 12,
+    fontFamily: 'RobotoCondensed-Bold',
   },
   message: {
     fontSize: 16,
@@ -72,10 +73,12 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 24,
     lineHeight: 22,
+    fontFamily: 'RobotoCondensed-Regular',
   },
   accountName: {
     fontWeight: 'bold',
     color: '#1a73e8',
+    fontFamily: 'RobotoCondensed-SemiBold',
   },
   buttonContainer: {
     flexDirection: 'row',
@@ -93,6 +96,7 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
+    fontFamily: 'RobotoCondensed-SemiBold',
   },
   deleteButton: {
     flex: 1,
@@ -105,5 +109,6 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
+    fontFamily: 'RobotoCondensed-SemiBold',
   },
 });

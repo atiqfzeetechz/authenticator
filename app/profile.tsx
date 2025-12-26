@@ -202,7 +202,7 @@ export default function ProfileScreen() {
 
           {/* Version Info */}
           <View style={styles.versionContainer}>
-            <Text style={styles.versionText}>v1.0.0 • © 2024 YourApp</Text>
+            <Text style={styles.versionText}>v1.0.0 • © 2024 Cool Authenticator</Text>
           </View>
         </ScrollView>
       </LinearGradient>
@@ -214,7 +214,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#0a0a0a',
-    paddingTop:StatusBar.currentHeight
+    // paddingTop:StatusBar.currentHeight
   },
   background: {
     flex: 1,

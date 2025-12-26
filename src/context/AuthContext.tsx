@@ -23,7 +23,7 @@ export function AuthProvider({ children }: any) {
   // Auth state listener
   useEffect(() => {
     GoogleSignin.configure({
-      webClientId: '680795358184-ouc9homjarr9qh9kjvji01thvieluuve.apps.googleusercontent.com',
+      webClientId: '902277332692-n3knqqcjhi2nbvp8i8bqpcov1k9vfr6h.apps.googleusercontent.com',
       offlineAccess: true,
     });
 

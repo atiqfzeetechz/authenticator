@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, TouchableOpacity, Dimensions } from 'react-native'
+import { StyleSheet, Text, View, TouchableOpacity, Dimensions, Image } from 'react-native'
 import React from 'react'
 import { GoogleSigninButton } from '@react-native-google-signin/google-signin';
 import { useAuth } from '../context/AuthContext';
@@ -9,18 +9,7 @@ export default function GoogleLoginFixed() {
   const { login, isLoggedIn } = useAuth();
 
   if (isLoggedIn) {
-    return (
-      <View style={styles.successContainer}>
-        <View style={styles.successIconContainer}>
-          <Text style={styles.successIcon}>✓</Text>
-        </View>
-        <Text style={styles.successTitle}>Login Successful!</Text>
-        <Text style={styles.successSubtitle}>You are now logged in with Google</Text>
-        <View style={styles.successBadge}>
-          <Text style={styles.successBadgeText}>ACTIVE SESSION</Text>
-        </View>
-      </View>
-    )
+    return 
   }
 
   return (
@@ -31,9 +20,25 @@ export default function GoogleLoginFixed() {
         onPress={login}
         activeOpacity={0.8}
       >
-        <View style={styles.googleIconContainer}>
+        {/* <View style={styles.googleIconContainer}>
           <Text style={styles.googleIcon}>G</Text>
-        </View>
+        </View> */}
+        <Image
+        source={require('../../assets/images/icons8-google-logo-48.png')}
+       style={{
+       borderColor:"red",
+      //  borderWidth:1,
+       width: 36,
+       height: 36,
+       borderRadius: 8,
+       alignItems: 'center',
+       justifyContent: 'center',
+       marginRight: 12,
+       }}
+   
+       resizeMode='contain'
+        
+        />
         <Text style={styles.buttonText}>Continue with Google</Text>
       </TouchableOpacity>
       

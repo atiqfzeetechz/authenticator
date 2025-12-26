@@ -18,7 +18,7 @@ useEffect(()=>{
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Ionicons name="shield-checkmark" size={80} color="#1a73e8" />
-        <Text style={styles.title}>Authenticator</Text>
+        <Text style={styles.title}>Cool Authenticator</Text>
         <Text style={styles.subtitle}>Secure your accounts with 2FA</Text>
       </View>
 

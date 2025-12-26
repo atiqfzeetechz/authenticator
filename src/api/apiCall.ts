@@ -27,7 +27,7 @@ export const addCodesApi = async (appName: String, secret: String) => {
     try {
         const response = await api.post('/api/auth/authenticator/import', {
             appName: appName,
-            secret:secret
+            secret: secret
         })
         return response
     } catch (error) {
@@ -35,4 +35,15 @@ export const addCodesApi = async (appName: String, secret: String) => {
     }
 }
 
-export const deletCode =()=>{}
+export const deletCode = async (secret: String) => {
+    try {
+        const response = api.delete('/api/auth/authenticator/delete', {
+
+            data: { secret }   // ✅ BODY goes here
+
+        })
+        return response
+    } catch (error) {
+        console.log(error)
+    }
+}

@@ -1,41 +1,41 @@
 {
   "project_info": {
-    "project_number": "680795358184",
-    "project_id": "coolauthenticator",
-    "storage_bucket": "coolauthenticator.firebasestorage.app"
+    "project_number": "902277332692",
+    "project_id": "cool-authenticator",
+    "storage_bucket": "cool-authenticator.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:680795358184:android:0352790bce013b47945a5d",
+        "mobilesdk_app_id": "1:902277332692:android:a70a4fc462760e99e60541",
         "android_client_info": {
           "package_name": "com.authenticator.fzeetechz"
         }
       },
       "oauth_client": [
         {
-          "client_id": "680795358184-l4r1ohc2n9nu3elgi3u1ikoiuv596r1l.apps.googleusercontent.com",
+          "client_id": "902277332692-kr3ec5jrp66fveddl4g9m6kqqddlssje.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.authenticator.fzeetechz",
-            "certificate_hash": "a3238732b0344db7ff0a7f21237e8290264b5ce8"
+            "certificate_hash": "70fdabe20fd881b012cd9dca537caa00e9245ca9"
           }
         },
         {
-          "client_id": "680795358184-ouc9homjarr9qh9kjvji01thvieluuve.apps.googleusercontent.com",
+          "client_id": "902277332692-n3knqqcjhi2nbvp8i8bqpcov1k9vfr6h.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyCT1tir6ZI9eZnQ4gJmM9cQTG-JCZDj9dI"
+          "current_key": "AIzaSyDMUR9NIK7HXlzlhOxdf6D-e373gBtxnI4"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "680795358184-ouc9homjarr9qh9kjvji01thvieluuve.apps.googleusercontent.com",
+              "client_id": "902277332692-n3knqqcjhi2nbvp8i8bqpcov1k9vfr6h.apps.googleusercontent.com",
               "client_type": 3
             }
           ]
