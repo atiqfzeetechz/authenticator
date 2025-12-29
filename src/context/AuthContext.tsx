@@ -5,7 +5,7 @@ import { signOut } from '@react-native-firebase/auth';
 import auth from '@react-native-firebase/auth';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { router } from 'expo-router';
-import { loginwithGoogleApi, getAllCodes } from '../api/apiCall';
+import { loginwithGoogleApi, getAllCodes, addCodesApi, deletCode } from '../api/apiCall';
 import useNetwork from '@/src/hooks/useNetwork';
 
 const AuthContext = createContext<any>(null);
@@ -18,7 +18,8 @@ export function AuthProvider({ children }: any) {
   const [codes, setCodes] = useState<Record<string, string>>({});
   const [remaining, setRemaining] = useState(30);
   const [isSynced, setIsSynced] = useState(false);
-  const isOnline = useNetwork();
+  const [pendingChanges, setPendingChanges] = useState<any[]>([]);
+  const {isOnline} = useNetwork();
 
   // Auth state listener
   useEffect(() => {
@@ -35,6 +36,8 @@ export function AuthProvider({ children }: any) {
   }, []);
 
 
+  // console.log(accounts)
+  console.log(pendingChanges)
 
   const login = async () => {
     try {
@@ -81,10 +84,18 @@ export function AuthProvider({ children }: any) {
     }
   }, [isLoggedIn, user?.email, isOnline]);
 
+  // Sync pending changes when coming online
+  useEffect(() => {
+    if (isOnline && pendingChanges.length > 0) {
+      syncPendingChanges();
+    }
+  }, [isOnline, pendingChanges]);
+
   const loadAllUserAccounts = async () => {
     try {
       const stored = await AsyncStorage.getItem('allUserAccounts');
       const syncStatus = await AsyncStorage.getItem('syncStatus');
+      const pending = await AsyncStorage.getItem('pendingChanges');
 
       if (stored) {
         const allAccounts = JSON.parse(stored);
@@ -92,6 +103,10 @@ export function AuthProvider({ children }: any) {
         if (user?.email && allAccounts[user.email]) {
           setAccounts(allAccounts[user.email]);
         }
+      }
+
+      if (pending) {
+        setPendingChanges(JSON.parse(pending));
       }
 
       setIsSynced(syncStatus === 'true');
@@ -102,10 +117,16 @@ export function AuthProvider({ children }: any) {
 
   const syncWithServer = async () => {
     try {
+      // First sync pending changes to server
+      if (pendingChanges.length > 0) {
+        await syncPendingChanges();
+      }
+
+      // Then pull latest from server
       const res = await getAllCodes();
       if (res?.success && res?.data?.authenticators) {
-        const serverAccounts = res.data.authenticators.map((auth: any) => ({
-          id: auth.id || Date.now().toString(),
+        const serverAccounts = res.data.authenticators.map((auth: any, index: number) => ({
+          id: auth.id || `server_${Date.now()}_${index}`,
           name: auth.appName || auth.name,
           secret: auth.secretKey || auth.secret,
           email: res.data.email
@@ -128,6 +149,77 @@ export function AuthProvider({ children }: any) {
       console.log('Sync failed:', error);
       setIsSynced(false);
     }
+  };
+
+  const syncPendingChanges = async () => {
+    if (pendingChanges.length === 0) return;
+    
+    // Optimize: Cancel out ADD/DELETE pairs for same secret
+    const optimizedChanges = pendingChanges.reduce((acc: any[], change) => {
+      const oppositeType = change.type === 'ADD' ? 'DELETE' : 'ADD';
+      const existingOpposite = acc.findIndex(c => 
+        c.type === oppositeType && c.data.secret === change.data.secret
+      );
+      
+      if (existingOpposite !== -1) {
+        acc.splice(existingOpposite, 1); // Remove opposite
+      } else {
+        acc.push(change); // Add current
+      }
+      return acc;
+    }, []);
+    
+    const successfulChanges: any[] = [];
+    
+    try {
+      for (const change of optimizedChanges) {
+        try {
+          if (change.type === 'ADD') {
+            await addCodesApi(change.data.name, change.data.secret);
+          } else if (change.type === 'DELETE') {
+            await deletCode(change.data.secret);
+          }
+          successfulChanges.push(change);
+        } catch (error: any) {
+          console.log(`Failed to sync ${change.type}:`, error);
+          
+          // Treat 404 as success for DELETE (already deleted)
+          if (change.type === 'DELETE' && error?.response?.status === 404) {
+            console.log('DELETE: Item already deleted on server');
+            successfulChanges.push(change);
+          }
+          // Treat 409/400 as success for ADD (already exists)
+          else if (change.type === 'ADD' && (error?.response?.status === 409 || error?.response?.status === 400)) {
+            console.log('ADD: Item already exists on server');
+            successfulChanges.push(change);
+          }
+        }
+      }
+      
+      // Update pending with remaining changes
+      const remainingChanges = optimizedChanges.filter(change => 
+        !successfulChanges.some(success => 
+          success.type === change.type && 
+          success.data.secret === change.data.secret
+        )
+      );
+      
+      setPendingChanges(remainingChanges);
+      
+      if (remainingChanges.length === 0) {
+        await AsyncStorage.removeItem('pendingChanges');
+      } else {
+        await AsyncStorage.setItem('pendingChanges', JSON.stringify(remainingChanges));
+      }
+    } catch (error) {
+      console.log('Sync pending changes failed:', error);
+    }
+  };
+
+  const addToPendingChanges = async (change: any) => {
+    const updated = [...pendingChanges, change];
+    setPendingChanges(updated);
+    await AsyncStorage.setItem('pendingChanges', JSON.stringify(updated));
   };
 
   // 🔁 OTP regeneration every second
@@ -164,7 +256,7 @@ export function AuthProvider({ children }: any) {
       name = `${acc.name} (${count})`;
     }
 
-    const newAcc = { ...acc, name };
+    const newAcc = { ...acc, name, id: `${Date.now()}_${Math.random().toString(36).substr(2, 9)}` };
     const updatedUserAccounts = [...currentUserAccounts, newAcc];
 
     // Update allUserAccounts structure
@@ -176,6 +268,38 @@ export function AuthProvider({ children }: any) {
     setAllUserAccounts(updatedAllAccounts);
     setAccounts(updatedUserAccounts);
     await AsyncStorage.setItem('allUserAccounts', JSON.stringify(updatedAllAccounts));
+
+    console.log('Adding account, isOnline:', isOnline);
+    
+    // Always add to pending first
+    await addToPendingChanges({ type: 'ADD', data: newAcc });
+    
+    // Try server only if online
+    if (isOnline) {
+      try {
+        console.log('Trying server ADD...');
+        await addCodesApi(newAcc.name, newAcc.secret);
+        console.log('Server ADD successful, removing from pending');
+        
+        // Get fresh pending changes and remove this one
+        const currentPending = await AsyncStorage.getItem('pendingChanges');
+        const parsedPending = currentPending ? JSON.parse(currentPending) : [];
+        const updated = parsedPending.filter((change: any) => 
+          !(change.type === 'ADD' && change.data.secret === newAcc.secret)
+        );
+        
+        setPendingChanges(updated);
+        if (updated.length === 0) {
+          await AsyncStorage.removeItem('pendingChanges');
+        } else {
+          await AsyncStorage.setItem('pendingChanges', JSON.stringify(updated));
+        }
+      } catch (error) {
+        console.log('Add failed, will sync later');
+      }
+    } else {
+      console.log('Offline - added to pending only');
+    }
   };
 
   // 🔁 Clear all accounts
@@ -208,6 +332,7 @@ export function AuthProvider({ children }: any) {
     
     const userEmail = user.email;
     const currentUserAccounts = allUserAccounts[userEmail] || [];
+    const accountToRemove = currentUserAccounts.find((acc: any) => acc.id === accountId);
     const updatedUserAccounts = currentUserAccounts.filter((acc: any) => acc.id !== accountId);
     
     const updatedAllAccounts = {
@@ -218,6 +343,63 @@ export function AuthProvider({ children }: any) {
     setAllUserAccounts(updatedAllAccounts);
     setAccounts(updatedUserAccounts);
     await AsyncStorage.setItem('allUserAccounts', JSON.stringify(updatedAllAccounts));
+
+    console.log('Removing account, isOnline:', isOnline);
+
+    if (accountToRemove) {
+      // Get fresh pending changes
+      const currentPending = await AsyncStorage.getItem('pendingChanges');
+      const parsedPending = currentPending ? JSON.parse(currentPending) : [];
+      
+      // Check if this was added offline
+      const wasAddedOffline = parsedPending.some((change: any) => 
+        change.type === 'ADD' && change.data.secret === accountToRemove.secret
+      );
+
+      if (wasAddedOffline) {
+        console.log('Removing offline-added account from pending');
+        // Just remove from pending ADD
+        const filteredPending = parsedPending.filter((change: any) => 
+          !(change.type === 'ADD' && change.data.secret === accountToRemove.secret)
+        );
+        setPendingChanges(filteredPending);
+        if (filteredPending.length === 0) {
+          await AsyncStorage.removeItem('pendingChanges');
+        } else {
+          await AsyncStorage.setItem('pendingChanges', JSON.stringify(filteredPending));
+        }
+      } else {
+        // Add to pending DELETE first
+        await addToPendingChanges({ type: 'DELETE', data: accountToRemove });
+        
+        // Try server only if online
+        if (isOnline) {
+          try {
+            console.log('Trying server DELETE...');
+            await deletCode(accountToRemove.secret);
+            console.log('Server DELETE successful, removing from pending');
+            
+            // Get fresh pending and remove this DELETE
+            const freshPending = await AsyncStorage.getItem('pendingChanges');
+            const freshParsed = freshPending ? JSON.parse(freshPending) : [];
+            const updated = freshParsed.filter((change: any) => 
+              !(change.type === 'DELETE' && change.data.secret === accountToRemove.secret)
+            );
+            
+            setPendingChanges(updated);
+            if (updated.length === 0) {
+              await AsyncStorage.removeItem('pendingChanges');
+            } else {
+              await AsyncStorage.setItem('pendingChanges', JSON.stringify(updated));
+            }
+          } catch (error) {
+            console.log('Delete failed, will sync later');
+          }
+        } else {
+          console.log('Offline - added to pending only');
+        }
+      }
+    }
   };
 
 
