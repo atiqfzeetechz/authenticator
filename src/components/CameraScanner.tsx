@@ -10,6 +10,7 @@ import { parseOtpAuth } from '@/src/utils/parseOtpAuth';
 import { useAuth } from '@/src/context/AuthContext';
 import uuid from 'react-native-uuid';
 import { addCodesApi } from '../api/apiCall';
+import useNetwork from '../hooks/useNetwork';
 
 export default function CameraScanner({ onClose }: any) {
   const [facing, setFacing] = useState<CameraType>('back');
@@ -18,6 +19,8 @@ export default function CameraScanner({ onClose }: any) {
 
   // ✅ CONTEXT YAHAN AAYEGA
   const { addAccount } = useAuth();
+  const {isOnline} = useNetwork();
+
 
   if (!permission) return <View />;
 
@@ -34,21 +37,37 @@ export default function CameraScanner({ onClose }: any) {
 
   // ✅ YAHIN PAR TUMHARA PEHLE WALA CODE AAYEGA
   const handleBarCodeScanned = async (result: BarcodeScanningResult) => {
+
     if (scanned) return;
     setScanned(true);
 
     try {
+      console.log('here')
       const { name, secret } = parseOtpAuth(result.data);
-      const addAcooutApiRes = await addCodesApi(name, secret)
-      if (!addAcooutApiRes?.success) {
-        return
+      console.log(name , secret)
+ console.log(isOnline)
+      if (isOnline) {
+
+        const addAcooutApiRes = await addCodesApi(name, secret)
+        if (!addAcooutApiRes?.success) {
+          return
+        }
+       
+        addAccount({
+          id: addAcooutApiRes?.data?.id || Date.now().toString(),
+          name,
+          secret,
+        });
+      } else {
+         console.log('added')
+        addAccount({
+          id: Date.now().toString(),
+          name,
+          secret,
+        });
       }
 
-      addAccount({
-        id: addAcooutApiRes.data?.id,
-        name,
-        secret,
-      });
+
 
       onClose?.(); // modal close
     } catch (err) {

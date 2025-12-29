@@ -17,7 +17,7 @@ export default function HomeScreen() {
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<any>(null);
   const { accounts, codes, remaining, isLoggedIn, user, removeAccount } = useAuth();
-  const isOnline = useNetwork();
+  const {isOnline} = useNetwork();
 
   const handleDelete = (item: any) => {
     setItemToDelete(item);
