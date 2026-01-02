@@ -45,7 +45,7 @@ export default function CameraScanner({ onClose }: any) {
       console.log('here')
       const { name, secret } = parseOtpAuth(result.data);
       console.log(name , secret)
- console.log(isOnline)
+
       if (isOnline) {
 
         const addAcooutApiRes = await addCodesApi(name, secret)

@@ -12,7 +12,7 @@ export default function useNetwork() {
         setNetworkState(state);
         const online = state?.isConnected === true && state?.type !== Network.NetworkStateType.NONE;
         setIsOnline(online);
-        console.log('Network Status:', online ? 'ONLINE' : 'OFFLINE');
+ 
       } catch (error) {
         console.log('Network check failed:', error);
         setIsOnline(false);

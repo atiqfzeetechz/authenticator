@@ -37,7 +37,7 @@ export function AuthProvider({ children }: any) {
 
 
   // console.log(accounts)
-  console.log(pendingChanges)
+
 
   const login = async () => {
     try {

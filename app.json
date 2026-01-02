@@ -53,7 +53,8 @@
       ],
       "expo-web-browser",
       "@react-native-google-signin/google-signin",
-      "expo-font"
+      "expo-font",
+      "@react-native-firebase/crashlytics"
     ],
     "experiments": {
       "typedRoutes": true,
