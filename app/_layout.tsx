@@ -1,6 +1,3 @@
-
-
-
 import { Stack } from 'expo-router';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { AuthProvider } from '@/src/context/AuthContext';
@@ -9,34 +6,39 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import { Camera } from 'expo-camera';
 import crashlytics from '@react-native-firebase/crashlytics';
+import {checkForInAppUpdate} from '../src/utils/appUpdateFun'
 
 SplashScreen.preventAutoHideAsync();
 
 export default function App() {
   const [loaded, error] = useFonts({
-    'RobotoMedium': require('../assets/fonts/RobotoCondensed-Medium.ttf'),
+    RobotoMedium: require('../assets/fonts/RobotoCondensed-Medium.ttf'),
     'RobotoCondensed-Light': require('../assets/fonts/RobotoCondensed-Light.ttf'),
     'RobotoCondensed-SemiBold': require('../assets/fonts/RobotoCondensed-SemiBold.ttf'),
   });
 
+  // Camera permission
   useEffect(() => {
     (async () => {
       const { status } = await Camera.requestCameraPermissionsAsync();
       if (status !== 'granted') {
-        console.log('Camera permission denied');
+        crashlytics().log('Camera permission denied');
       }
+      checkForInAppUpdate()
     })();
   }, []);
 
-
+  // Crashlytics init (SAFE)
   useEffect(() => {
-  crashlytics().log('App mounted - test crash hiii');
+    crashlytics().setCrashlyticsCollectionEnabled(!__DEV__);
 
-  setTimeout(() => {
-    crashlytics().crash();
-  }, 3000);
-}, []);
+    crashlytics().log('🚀 App launched');
 
+    crashlytics().setAttributes({
+      platform: 'android',
+      env: __DEV__ ? 'development' : 'production',
+    });
+  }, []);
 
   useEffect(() => {
     if (loaded || error) {
@@ -44,9 +46,7 @@ export default function App() {
     }
   }, [loaded, error]);
 
-  if (!loaded && !error) {
-    return null;
-  }
+  if (!loaded && !error) return null;
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
